@@ -43,6 +43,11 @@ const Footer = () => {
                   SOS Hub
                 </Link>
               </li>
+               <li>
+                <Link to="/circles" className="hover:text-foreground transition-colors">
+                  Local Pet Circles
+                </Link>
+              </li>
               <li>
                 <Link to="/knowledge" className="hover:text-foreground transition-colors">
                   Knowledge Wall
