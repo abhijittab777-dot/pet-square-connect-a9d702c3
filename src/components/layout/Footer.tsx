@@ -48,6 +48,11 @@ const Footer = () => {
                   Knowledge Wall
                 </Link>
               </li>
+                <li>
+                <Link to="/pet-profile" className="hover:text-foreground transition-colors">
+                  Pet Profile
+                </Link>
+              </li>
             </ul>
           </div>
 
