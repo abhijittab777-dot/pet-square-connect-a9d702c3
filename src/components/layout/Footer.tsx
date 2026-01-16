@@ -58,6 +58,11 @@ const Footer = () => {
                   Activity & Play
                 </Link>
               </li>
+               <li>
+                <Link to="/admin" className="hover:text-foreground transition-colors">
+                  Administrator
+                </Link>
+              </li>
             </ul>
           </div>
 
