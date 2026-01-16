@@ -53,6 +53,11 @@ const Footer = () => {
                   Pet Profile
                 </Link>
               </li>
+              <li>
+                <Link to="/activity" className="hover:text-foreground transition-colors">
+                  Activity & Play
+                </Link>
+              </li>
             </ul>
           </div>
 
