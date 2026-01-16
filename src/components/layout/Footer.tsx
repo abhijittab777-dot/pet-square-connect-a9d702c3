@@ -34,11 +34,6 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/map" className="hover:text-foreground transition-colors">
-                  Resource Map
-                </Link>
-              </li>
-              <li>
                 <Link to="/sos" className="hover:text-foreground transition-colors">
                   SOS Hub
                 </Link>
@@ -65,6 +60,11 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold mb-4">Resources</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
+              <li>
+                <Link to="/map" className="hover:text-foreground transition-colors">
+                  Resource Map
+                </Link>
+              </li>
               <li>
                 <Link to="/adoption" className="hover:text-foreground transition-colors">
                   Adoption Portal
