@@ -42,7 +42,33 @@ const PetProfilePage = () => {
     species: 'dog' as Pet['species'],
     breed: '',
     age: '',
+    photo: '',
   });
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>, isNewPet: boolean = false) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      
+      if (isNewPet) {
+        setNewPetData(prev => ({ ...prev, photo: base64 }));
+      } else {
+        setPets(prev => prev.map(pet => 
+          pet.id === activePetId ? { ...pet, photo: base64 } : pet
+        ));
+        toast.success('Photo updated! 📸');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   const activePet = useMemo(() => {
     return pets.find(p => p.id === activePetId) || pets[0];
@@ -65,6 +91,7 @@ const PetProfilePage = () => {
       species: newPetData.species,
       breed: newPetData.breed || 'Mixed',
       age: parseInt(newPetData.age) || 1,
+      photo: newPetData.photo || undefined,
       vaccinated: false,
       neutered: false,
       microchipped: false,
@@ -74,7 +101,7 @@ const PetProfilePage = () => {
     setPets(prev => [...prev, newPet]);
     setActivePetId(newPet.id);
     setShowAddPet(false);
-    setNewPetData({ name: '', species: 'dog', breed: '', age: '' });
+    setNewPetData({ name: '', species: 'dog', breed: '', age: '', photo: '' });
     toast.success(`${newPet.name} added to your family! 🐾`);
   };
 
@@ -124,16 +151,22 @@ const PetProfilePage = () => {
           <div className="flex flex-col md:flex-row gap-6">
             {/* Pet Photo */}
             <div className="relative group">
-              <div className="w-32 h-32 md:w-40 md:h-40 rounded-3xl bg-secondary flex items-center justify-center mx-auto md:mx-0">
+              <div className="w-32 h-32 md:w-40 md:h-40 rounded-3xl bg-secondary flex items-center justify-center mx-auto md:mx-0 overflow-hidden">
                 {activePet.photo ? (
-                  <img src={activePet.photo} alt={activePet.name} className="w-full h-full object-cover rounded-3xl" />
+                  <img src={activePet.photo} alt={activePet.name} className="w-full h-full object-cover" />
                 ) : (
                   <PawPrint className="w-16 h-16 text-primary" />
                 )}
               </div>
-              <button className="absolute bottom-2 right-2 p-2 rounded-full bg-card shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
+              <label className="absolute bottom-2 right-2 p-2 rounded-full bg-card shadow-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-muted">
                 <Camera className="w-4 h-4" />
-              </button>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={(e) => handlePhotoUpload(e, false)}
+                  className="hidden" 
+                />
+              </label>
             </div>
 
             {/* Pet Info */}
@@ -437,10 +470,25 @@ const PetProfilePage = () => {
 
               <div>
                 <label className="block text-sm font-medium mb-2">Photo (Optional)</label>
-                <div className="border-2 border-dashed border-border rounded-xl p-6 text-center hover:border-primary/50 transition-colors cursor-pointer">
-                  <Camera className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">Click to upload</p>
-                </div>
+                <label className="border-2 border-dashed border-border rounded-xl p-6 text-center hover:border-primary/50 transition-colors cursor-pointer block">
+                  {newPetData.photo ? (
+                    <div className="relative">
+                      <img src={newPetData.photo} alt="Preview" className="w-20 h-20 rounded-xl object-cover mx-auto" />
+                      <p className="text-xs text-muted-foreground mt-2">Click to change</p>
+                    </div>
+                  ) : (
+                    <>
+                      <Camera className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">Click to upload</p>
+                    </>
+                  )}
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={(e) => handlePhotoUpload(e, true)}
+                    className="hidden" 
+                  />
+                </label>
               </div>
             </div>
 
