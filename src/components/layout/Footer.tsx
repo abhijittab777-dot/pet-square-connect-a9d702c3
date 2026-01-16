@@ -24,6 +24,11 @@ const Footer = () => {
             <h4 className="font-semibold mb-4">Platform</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
+                <Link to="/dashboard" className="hover:text-foreground transition-colors">
+                  Dashboard
+                </Link>
+              </li>
+              <li>
                 <Link to="/town-square" className="hover:text-foreground transition-colors">
                   Town Square
                 </Link>
