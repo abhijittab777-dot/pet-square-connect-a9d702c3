@@ -1,9 +1,6 @@
-import { useState, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { Icon } from 'leaflet';
+import { useState, useMemo, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import { MapPin, Star, Phone, Clock, Users, Stethoscope, Scissors, TreePine, Coffee, GraduationCap, User } from 'lucide-react';
-import 'leaflet/dist/leaflet.css';
 
 const categories = [
   { id: 'all', label: 'All', icon: MapPin, color: 'primary' },
@@ -26,25 +23,86 @@ const locations = [
   { id: 8, name: 'City Vet Emergency', category: 'vets', rating: 4.7, distance: '1.5 mi', busy: true, lat: 40.7450, lng: -73.9880, phone: '(555) 678-9012', hours: '24/7', checkedIn: 4 },
 ];
 
-// Custom marker icons
-const createIcon = (color: string) => new Icon({
-  iconUrl: `data:image/svg+xml,${encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" width="32" height="32">
-      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-    </svg>
-  `)}`,
-  iconSize: [32, 32],
-  iconAnchor: [16, 32],
-  popupAnchor: [0, -32],
-});
+// Lazy load the map component
+const LazyMap = ({ filteredLocations, onSelectLocation }: { 
+  filteredLocations: typeof locations; 
+  onSelectLocation: (loc: typeof locations[0]) => void;
+}) => {
+  const [MapComponents, setMapComponents] = useState<any>(null);
 
-const markerIcons: Record<string, Icon> = {
-  vets: createIcon('#dc2626'),
-  groomers: createIcon('#c2703a'),
-  parks: createIcon('#16a34a'),
-  cafes: createIcon('#eab308'),
-  trainers: createIcon('#4a7c59'),
-  sitters: createIcon('#c2703a'),
+  useEffect(() => {
+    // Dynamically import Leaflet components
+    Promise.all([
+      import('react-leaflet'),
+      import('leaflet'),
+      import('leaflet/dist/leaflet.css')
+    ]).then(([reactLeaflet, L]) => {
+      // Create custom marker icons
+      const createIcon = (color: string) => new L.Icon({
+        iconUrl: `data:image/svg+xml,${encodeURIComponent(`
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" width="32" height="32">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+          </svg>
+        `)}`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32],
+      });
+
+      const markerIcons: Record<string, L.Icon> = {
+        vets: createIcon('#dc2626'),
+        groomers: createIcon('#c2703a'),
+        parks: createIcon('#16a34a'),
+        cafes: createIcon('#eab308'),
+        trainers: createIcon('#4a7c59'),
+        sitters: createIcon('#c2703a'),
+      };
+
+      setMapComponents({ reactLeaflet, markerIcons });
+    });
+  }, []);
+
+  if (!MapComponents) {
+    return (
+      <div className="h-full w-full bg-muted/50 flex items-center justify-center rounded-2xl">
+        <div className="text-muted-foreground animate-pulse">Loading map...</div>
+      </div>
+    );
+  }
+
+  const { MapContainer, TileLayer, Marker, Popup } = MapComponents.reactLeaflet;
+  const { markerIcons } = MapComponents;
+
+  return (
+    <MapContainer
+      center={[40.7580, -73.9855]}
+      zoom={14}
+      style={{ height: '100%', width: '100%', borderRadius: '1rem' }}
+      scrollWheelZoom={true}
+    >
+      <TileLayer
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+      {filteredLocations.map((location) => (
+        <Marker
+          key={location.id}
+          position={[location.lat, location.lng]}
+          icon={markerIcons[location.category]}
+          eventHandlers={{
+            click: () => onSelectLocation(location),
+          }}
+        >
+          <Popup>
+            <div className="p-1">
+              <h3 className="font-semibold">{location.name}</h3>
+              <p className="text-sm text-muted-foreground">{location.distance}</p>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+    </MapContainer>
+  );
 };
 
 const ResourceMapPage = () => {
@@ -86,34 +144,10 @@ const ResourceMapPage = () => {
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Map */}
           <div className="lg:col-span-2 card-premium overflow-hidden" style={{ height: '500px' }}>
-            <MapContainer
-              center={[40.7580, -73.9855]}
-              zoom={14}
-              style={{ height: '100%', width: '100%' }}
-              scrollWheelZoom={true}
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              {filteredLocations.map((location) => (
-                <Marker
-                  key={location.id}
-                  position={[location.lat, location.lng]}
-                  icon={markerIcons[location.category]}
-                  eventHandlers={{
-                    click: () => setSelectedLocation(location),
-                  }}
-                >
-                  <Popup>
-                    <div className="p-1">
-                      <h3 className="font-semibold">{location.name}</h3>
-                      <p className="text-sm text-muted-foreground">{location.distance}</p>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-            </MapContainer>
+            <LazyMap 
+              filteredLocations={filteredLocations} 
+              onSelectLocation={setSelectedLocation}
+            />
           </div>
 
           {/* Location Cards */}
