@@ -1,108 +1,208 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useMemo, useState } from 'react';
+import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
 import Layout from '@/components/layout/Layout';
-import { MapPin, Star, Phone, Clock, Users, Stethoscope, Scissors, TreePine, Coffee, GraduationCap, User } from 'lucide-react';
+import {
+  Coffee,
+  Clock,
+  GraduationCap,
+  MapPin,
+  Phone,
+  Scissors,
+  Star,
+  Stethoscope,
+  TreePine,
+  User,
+  Users,
+} from 'lucide-react';
 
-const categories = [
-  { id: 'all', label: 'All', icon: MapPin, color: 'primary' },
-  { id: 'vets', label: 'Vets', icon: Stethoscope, color: 'destructive' },
-  { id: 'groomers', label: 'Groomers', icon: Scissors, color: 'accent' },
-  { id: 'parks', label: 'Dog Parks', icon: TreePine, color: 'success' },
-  { id: 'cafes', label: 'Pet Cafes', icon: Coffee, color: 'warning' },
-  { id: 'trainers', label: 'Trainers', icon: GraduationCap, color: 'primary' },
-  { id: 'sitters', label: 'Sitters', icon: User, color: 'accent' },
+type CategoryId =
+  | 'all'
+  | 'vets'
+  | 'groomers'
+  | 'parks'
+  | 'cafes'
+  | 'trainers'
+  | 'sitters';
+
+type Location = {
+  id: number;
+  name: string;
+  category: Exclude<CategoryId, 'all'>;
+  rating: number;
+  distance: string;
+  busy: boolean;
+  lat: number;
+  lng: number;
+  phone: string;
+  hours: string;
+  checkedIn: number;
+};
+
+const categories: Array<{ id: CategoryId; label: string; icon: any }> = [
+  { id: 'all', label: 'All', icon: MapPin },
+  { id: 'vets', label: 'Vets', icon: Stethoscope },
+  { id: 'groomers', label: 'Groomers', icon: Scissors },
+  { id: 'parks', label: 'Dog Parks', icon: TreePine },
+  { id: 'cafes', label: 'Pet Cafes', icon: Coffee },
+  { id: 'trainers', label: 'Trainers', icon: GraduationCap },
+  { id: 'sitters', label: 'Sitters', icon: User },
 ];
 
-const locations = [
-  { id: 1, name: 'Happy Paws Vet Clinic', category: 'vets', rating: 4.8, distance: '0.5 mi', busy: false, lat: 40.7580, lng: -73.9855, phone: '(555) 123-4567', hours: '8AM - 6PM', checkedIn: 3 },
-  { id: 2, name: 'Fluffy Grooming Spa', category: 'groomers', rating: 4.6, distance: '0.8 mi', busy: true, lat: 40.7614, lng: -73.9776, phone: '(555) 234-5678', hours: '9AM - 7PM', checkedIn: 5 },
-  { id: 3, name: 'Central Dog Park', category: 'parks', rating: 4.9, distance: '0.3 mi', busy: false, lat: 40.7829, lng: -73.9654, phone: '', hours: '6AM - 10PM', checkedIn: 12 },
-  { id: 4, name: 'Bark & Brew Cafe', category: 'cafes', rating: 4.5, distance: '1.2 mi', busy: true, lat: 40.7549, lng: -73.9840, phone: '(555) 345-6789', hours: '7AM - 9PM', checkedIn: 8 },
-  { id: 5, name: 'Prospect Park Dog Run', category: 'parks', rating: 4.7, distance: '0.6 mi', busy: false, lat: 40.7694, lng: -73.9712, phone: '', hours: 'Open 24h', checkedIn: 6 },
-  { id: 6, name: 'Paws Training Academy', category: 'trainers', rating: 4.9, distance: '1.0 mi', busy: false, lat: 40.7505, lng: -73.9934, phone: '(555) 456-7890', hours: '10AM - 6PM', checkedIn: 2 },
-  { id: 7, name: 'Loving Paws Pet Sitters', category: 'sitters', rating: 4.8, distance: '0.4 mi', busy: false, lat: 40.7589, lng: -73.9901, phone: '(555) 567-8901', hours: 'By appointment', checkedIn: 0 },
-  { id: 8, name: 'City Vet Emergency', category: 'vets', rating: 4.7, distance: '1.5 mi', busy: true, lat: 40.7450, lng: -73.9880, phone: '(555) 678-9012', hours: '24/7', checkedIn: 4 },
+const locations: Location[] = [
+  {
+    id: 1,
+    name: 'Happy Paws Vet Clinic',
+    category: 'vets',
+    rating: 4.8,
+    distance: '0.5 mi',
+    busy: false,
+    lat: 40.758,
+    lng: -73.9855,
+    phone: '(555) 123-4567',
+    hours: '8AM - 6PM',
+    checkedIn: 3,
+  },
+  {
+    id: 2,
+    name: 'Fluffy Grooming Spa',
+    category: 'groomers',
+    rating: 4.6,
+    distance: '0.8 mi',
+    busy: true,
+    lat: 40.7614,
+    lng: -73.9776,
+    phone: '(555) 234-5678',
+    hours: '9AM - 7PM',
+    checkedIn: 5,
+  },
+  {
+    id: 3,
+    name: 'Central Dog Park',
+    category: 'parks',
+    rating: 4.9,
+    distance: '0.3 mi',
+    busy: false,
+    lat: 40.7829,
+    lng: -73.9654,
+    phone: '',
+    hours: '6AM - 10PM',
+    checkedIn: 12,
+  },
+  {
+    id: 4,
+    name: 'Bark & Brew Cafe',
+    category: 'cafes',
+    rating: 4.5,
+    distance: '1.2 mi',
+    busy: true,
+    lat: 40.7549,
+    lng: -73.984,
+    phone: '(555) 345-6789',
+    hours: '7AM - 9PM',
+    checkedIn: 8,
+  },
+  {
+    id: 5,
+    name: 'Prospect Park Dog Run',
+    category: 'parks',
+    rating: 4.7,
+    distance: '0.6 mi',
+    busy: false,
+    lat: 40.7694,
+    lng: -73.9712,
+    phone: '',
+    hours: 'Open 24h',
+    checkedIn: 6,
+  },
+  {
+    id: 6,
+    name: 'Paws Training Academy',
+    category: 'trainers',
+    rating: 4.9,
+    distance: '1.0 mi',
+    busy: false,
+    lat: 40.7505,
+    lng: -73.9934,
+    phone: '(555) 456-7890',
+    hours: '10AM - 6PM',
+    checkedIn: 2,
+  },
+  {
+    id: 7,
+    name: 'Loving Paws Pet Sitters',
+    category: 'sitters',
+    rating: 4.8,
+    distance: '0.4 mi',
+    busy: false,
+    lat: 40.7589,
+    lng: -73.9901,
+    phone: '(555) 567-8901',
+    hours: 'By appointment',
+    checkedIn: 0,
+  },
+  {
+    id: 8,
+    name: 'City Vet Emergency',
+    category: 'vets',
+    rating: 4.7,
+    distance: '1.5 mi',
+    busy: true,
+    lat: 40.745,
+    lng: -73.988,
+    phone: '(555) 678-9012',
+    hours: '24/7',
+    checkedIn: 4,
+  },
 ];
 
-// Lazy load the map component
-const LazyMap = ({ filteredLocations, onSelectLocation }: { 
-  filteredLocations: typeof locations; 
-  onSelectLocation: (loc: typeof locations[0]) => void;
-}) => {
-  const [MapComponents, setMapComponents] = useState<any>(null);
+const createPinSvg = (fill: string) =>
+  `data:image/svg+xml,${encodeURIComponent(`
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${fill}" width="32" height="32">
+    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+  </svg>
+`)}`;
 
-  useEffect(() => {
-    // Dynamically import Leaflet components
-    Promise.all([
-      import('react-leaflet'),
-      import('leaflet'),
-      import('leaflet/dist/leaflet.css')
-    ]).then(([reactLeaflet, L]) => {
-      // Create custom marker icons
-      const createIcon = (color: string) => new L.Icon({
-        iconUrl: `data:image/svg+xml,${encodeURIComponent(`
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" width="32" height="32">
-            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-          </svg>
-        `)}`,
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -32],
-      });
-
-      const markerIcons: Record<string, L.Icon> = {
-        vets: createIcon('#dc2626'),
-        groomers: createIcon('#c2703a'),
-        parks: createIcon('#16a34a'),
-        cafes: createIcon('#eab308'),
-        trainers: createIcon('#4a7c59'),
-        sitters: createIcon('#c2703a'),
-      };
-
-      setMapComponents({ reactLeaflet, markerIcons });
-    });
-  }, []);
-
-  if (!MapComponents) {
-    return (
-      <div className="h-full w-full bg-muted/50 flex items-center justify-center rounded-2xl">
-        <div className="text-muted-foreground animate-pulse">Loading map...</div>
-      </div>
-    );
-  }
-
-  const { MapContainer, TileLayer, Marker, Popup } = MapComponents.reactLeaflet;
-  const { markerIcons } = MapComponents;
-
-  return (
-    <MapContainer
-      center={[40.7580, -73.9855]}
-      zoom={14}
-      style={{ height: '100%', width: '100%', borderRadius: '1rem' }}
-      scrollWheelZoom={true}
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      {filteredLocations.map((location) => (
-        <Marker
-          key={location.id}
-          position={[location.lat, location.lng]}
-          icon={markerIcons[location.category]}
-          eventHandlers={{
-            click: () => onSelectLocation(location),
-          }}
-        >
-          <Popup>
-            <div className="p-1">
-              <h3 className="font-semibold">{location.name}</h3>
-              <p className="text-sm text-muted-foreground">{location.distance}</p>
-            </div>
-          </Popup>
-        </Marker>
-      ))}
-    </MapContainer>
-  );
+const markerIcons: Record<Location['category'], L.Icon> = {
+  // Match our design tokens (HSL values)
+  vets: new L.Icon({
+    iconUrl: createPinSvg('hsl(0 75% 55%)'),
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  }),
+  groomers: new L.Icon({
+    iconUrl: createPinSvg('hsl(18 55% 55%)'),
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  }),
+  parks: new L.Icon({
+    iconUrl: createPinSvg('hsl(142 55% 42%)'),
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  }),
+  cafes: new L.Icon({
+    iconUrl: createPinSvg('hsl(38 92% 50%)'),
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  }),
+  trainers: new L.Icon({
+    iconUrl: createPinSvg('hsl(150 25% 35%)'),
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  }),
+  sitters: new L.Icon({
+    iconUrl: createPinSvg('hsl(18 55% 55%)'),
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  }),
 };
 
 const ResourceMapPage = () => {
@@ -144,10 +244,35 @@ const ResourceMapPage = () => {
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Map */}
           <div className="lg:col-span-2 card-premium overflow-hidden" style={{ height: '500px' }}>
-            <LazyMap 
-              filteredLocations={filteredLocations} 
-              onSelectLocation={setSelectedLocation}
-            />
+            <MapContainer
+              center={[40.7580, -73.9855]}
+              zoom={14}
+              style={{ height: '100%', width: '100%' }}
+              scrollWheelZoom
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+
+              {filteredLocations.map((location) => (
+                <Marker
+                  key={location.id}
+                  position={[location.lat, location.lng]}
+                  icon={markerIcons[location.category]}
+                  eventHandlers={{
+                    click: () => setSelectedLocation(location),
+                  }}
+                >
+                  <Popup>
+                    <div className="p-1">
+                      <h3 className="font-semibold">{location.name}</h3>
+                      <p className="text-sm text-muted-foreground">{location.distance}</p>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
           </div>
 
           {/* Location Cards */}
