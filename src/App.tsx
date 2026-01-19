@@ -24,6 +24,7 @@ import CirclesPage from "./pages/CirclesPage";
 import JournalPage from "./pages/JournalPage";
 import HelpPage from "./pages/HelpPage";
 import AdminPage from "./pages/AdminPage";
+import RemindersPage from "./pages/RemindersPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -60,6 +61,7 @@ const App = () => {
             <Route path="/journal" element={<JournalPage />} />
             <Route path="/help" element={<HelpPage />} />
             <Route path="/admin" element={<AdminPage />} />
+            <Route path="/reminders" element={<RemindersPage />} />
             
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />
