@@ -218,8 +218,12 @@ const DashboardPage = () => {
             {activePet && (
               <Link to="/pet-profile" className="card-premium p-6 block card-hover">
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center">
-                    <PawPrint className="w-8 h-8 text-primary" />
+                  <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center overflow-hidden">
+                    {activePet.photo ? (
+                      <img src={activePet.photo} alt={activePet.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <PawPrint className="w-8 h-8 text-primary" />
+                    )}
                   </div>
                   <div>
                     <h3 className="text-xl font-bold">{activePet.name}</h3>
