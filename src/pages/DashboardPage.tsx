@@ -100,7 +100,7 @@ const DashboardPage = () => {
                   <Calendar className="w-5 h-5 text-primary" />
                   Today's Tasks
                 </h2>
-                <Link to="/dashboard" className="text-sm text-primary hover:underline">
+                <Link to="/reminders" className="text-sm text-primary hover:underline">
                   View all
                 </Link>
               </div>
